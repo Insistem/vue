@@ -16,9 +16,9 @@ function Vue (options) {
 }
 // 实现了众多的实例属性和方法 -mpy
 initMixin(Vue) // 扩展了_init 方法
-stateMixin(Vue)
-eventsMixin(Vue)
-lifecycleMixin(Vue)
-renderMixin(Vue)
+stateMixin(Vue) // 跟数据状态相关的属性和方法  Vue.prototype.$data/$props/$set/$delete/$watch
+eventsMixin(Vue) // $on/$emit/$once/$off
+lifecycleMixin(Vue) // _update(内部自动更新) / $forceUpdate（外部强制更新） / $destroy（外部强制销毁）
+renderMixin(Vue) // $nextTick / _render
 
 export default Vue
