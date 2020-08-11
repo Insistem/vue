@@ -14,6 +14,7 @@ let uid = 0
 
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
+    // Vue实例
     const vm: Component = this
     // a uid
     vm._uid = uid++
@@ -49,12 +50,15 @@ export function initMixin (Vue: Class<Component>) {
     }
     // expose real self
     vm._self = vm
-    initLifecycle(vm)
-    initEvents(vm)
-    initRender(vm)
-    callHook(vm, 'beforeCreate')
+    // 各种初始化
+    initLifecycle(vm) // vm.$parent/vm.$root
+    initEvents(vm) // vm.$options._parentListeners, 从父组件中拿到自定义监听的事件
+    initRender(vm) // vm._c / vm.$createElement / vm.$slots / vm.$attrs
+    callHook(vm, 'beforeCreate') // 在beforeCreate之前，数据还没初始化，所以不能使用data中的数据
+    // 获取祖辈注入的数据
     initInjections(vm) // resolve injections before data/props
-    initState(vm)
+    initState(vm) // 数据状态初始化： props/methods/data/computed/watch
+    // 给后代提供数据
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')
 
@@ -64,7 +68,7 @@ export function initMixin (Vue: Class<Component>) {
       mark(endTag)
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
-
+    // 选项如果有el，自动执行$mount
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }

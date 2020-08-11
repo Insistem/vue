@@ -11,10 +11,11 @@ function Vue (options) {
   ) {
     warn('Vue is a constructor and should be called with the `new` keyword')
   }
+  // 执行初始化 - 页面展示的时候执行，也就是new Vue（）的时候执行 -mpy
   this._init(options)
 }
-
-initMixin(Vue)
+// 实现了众多的实例属性和方法 -mpy
+initMixin(Vue) // 扩展了_init 方法
 stateMixin(Vue)
 eventsMixin(Vue)
 lifecycleMixin(Vue)

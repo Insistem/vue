@@ -13,6 +13,8 @@ export function initEvents (vm: Component) {
   vm._events = Object.create(null)
   vm._hasHookEvent = false
   // init parent attached events
+  // <Child @click="onClick">
+  // TODO:事件是谁派发，谁监听，典型的观察者模式，从老爹的监听中拿到自己需要事件?? -mpy
   const listeners = vm.$options._parentListeners
   if (listeners) {
     updateComponentListeners(vm, listeners)

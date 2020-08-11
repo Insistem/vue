@@ -31,14 +31,18 @@ extend(Vue.options.directives, platformDirectives)
 extend(Vue.options.components, platformComponents)
 
 // install platform patch function
+// web平台 实例上使用的__patch__方法 -mpy
 Vue.prototype.__patch__ = inBrowser ? patch : noop
 
 // public mount method
+// 实现$mount : 挂载组件 -mpy
 Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+  // 获取el元素（被挂载到的真实DOM）
   el = el && inBrowser ? query(el) : undefined
+  // 将模板转为真实DOM后，通过appendChild方法，添加到el元素中
   return mountComponent(this, el, hydrating)
 }
 
