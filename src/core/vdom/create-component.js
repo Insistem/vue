@@ -33,7 +33,9 @@ import {
 } from 'weex/runtime/recycle-list/render-component-template'
 
 // inline hooks to be invoked on component VNodes during patch
+// 在Vnode打补丁期间 调用内联钩子
 const componentVNodeHooks = {
+   // 组件实例化及挂载
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
     if (
       vnode.componentInstance &&
@@ -183,11 +185,13 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+   // 安装钩子
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
   const vnode = new VNode(
+     // 组件的名字
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
     { Ctor, propsData, listeners, tag, children },

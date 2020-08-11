@@ -200,7 +200,7 @@ export function parse (
       )
     }
   }
-
+  // 核心是处理HTML
   parseHTML(template, {
     warn,
     expectHTML: options.expectHTML,
@@ -277,6 +277,7 @@ export function parse (
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
+        // 结构性指令的处理 v-for
         processFor(element)
         processIf(element)
         processOnce(element)
@@ -291,6 +292,7 @@ export function parse (
 
       if (!unary) {
         currentParent = element
+        // start 标签入栈
         stack.push(element)
       } else {
         closeElement(element)

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+</head>
+<body>
+  <div id="demo">
+    <h1>组件化</h1>
+    <child></child>
+  </div>
+  <script src="../../dist/vue.js"></script>
+  <script >
+    Vue.component('child',{
+      name: 'child',
+      template: '<h1>我是child</h1>'
+    })
+    const app = new Vue({
+      el: '#demo',
+      data: { foo: ['xiaom', 'ceshi'] }
+    })
+    // console.log('app', app, app.$options.render())
+  </script>
+</body>
+</html>

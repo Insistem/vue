@@ -41,6 +41,7 @@ export class Observer {
 
   constructor (value: any) {
     this.value = value
+    // 数组的dep是存在observer实例上
     this.dep = new Dep()
     this.vmCount = 0
     def(value, '__ob__', this)
@@ -52,6 +53,7 @@ export class Observer {
       }
       this.observeArray(value)
     } else {
+      // 对象的dep是存在每个key上
       this.walk(value)
     }
   }
@@ -152,7 +154,7 @@ export function defineReactive (
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
-
+  // 这里是一个递归操作，处理这个key对应value的子val
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -198,6 +200,7 @@ export function defineReactive (
  * triggers change notification if the property doesn't
  * already exist.
  */
+  // 挂在Vue实例上的$set 方法
 export function set (target: Array<any> | Object, key: any, val: any): any {
   if (process.env.NODE_ENV !== 'production' &&
     (isUndef(target) || isPrimitive(target))

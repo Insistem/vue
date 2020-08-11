@@ -53,6 +53,7 @@ export function initGlobalAPI (Vue: GlobalAPI) {
 
   Vue.options = Object.create(null)
   ASSET_TYPES.forEach(type => {
+    // 在options中添加 components filters directives  三个属性的处理是一样的，所以放在了一起
     Vue.options[type + 's'] = Object.create(null)
   })
 
@@ -65,5 +66,6 @@ export function initGlobalAPI (Vue: GlobalAPI) {
   initUse(Vue)
   initMixin(Vue)
   initExtend(Vue)
+  // 将component() filter() 方法挂在Vue的构造函数上，这样我们才可以使用Vue.component()来注册组件
   initAssetRegisters(Vue)
 }

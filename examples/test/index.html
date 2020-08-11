@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="../../dist/vue.js"></script>
+  <title>Document</title>
+</head>
+<body>
+  <div id="app">
+    <h1  @click="growUp">我在父组件： 我叫{{name}}</h1>
+
+    <child1 v-bind="animal"></child1>
+    <child2 :name="name"></child2>
+    <!-- <child3 :com="com"></child3> -->
+  </div>
+
+  <!-- 子组件 child1 的声明 -->
+  <script type="text/x-template" id="child1">
+    <div ref="child1">
+      <h1>我是child1：</h1>
+         {{name}}
+         {{fly}}
+         {{run}}
+    </div>
+  </script>
+
+  <!-- 子组件 child2 的声明 -->
+  <script type="text/x-template" id="child2">
+    <div ref="child2">
+        <h1>我是child2：</h1>
+        我是child2： {{name}}
+    </div>
+  </script>
+
+  <!-- 子组件 child3 的声明 -->
+  <script type="text/x-template" id="child3">
+    <div ref="child3">
+        <h1>我是child3：{{com}}</h1>
+    </div>
+  </script>
+  <script>
+    // 组件 - child1 注册
+    Vue.component('child1', {
+      template: '#child1',
+      props: ['fly', 'run'],
+      data: ()=>{
+        return {
+          age: 2,
+          com: 'child1'
+        }
+      },
+      methods: {
+        growUp() {
+          this.age +=1
+          this.$emit('growUp')
+        }
+      }
+    })
+
+     // 组件 - child2 注册
+     Vue.component('child2', {
+      template: '#child2',
+      props: ['name'],
+      data: ()=>{
+        return {
+          age: 2,
+          com: 'child2'
+        }
+      },
+      methods: {
+        growUp() {
+          this.age +=1
+          this.$emit('growUp')
+        }
+      }
+    })
+
+    // 组件 - child3 注册 -- render
+    Vue.component('child3', {
+      template: '#child3',
+      props: ['com'],
+      data: ()=>{
+        return {
+          // age: 2,
+          // com: 'child2'
+        }
+      },
+      // watch: {
+      //   com() {
+      //     console.log(999)
+      //   }
+      // },
+      methods: {
+        growUp() {
+          this.age +=1
+          this.$emit('growUp')
+        }
+      }
+    })
+    // Vue
+    new Vue({
+      el: '#app',
+      data: {
+        name: 'mmp',  // ---> Dep
+        com: 'parent', // ---> Dep
+        animal: {
+          fly: 'bird',
+          run: 'dog'
+        }
+      },
+      methods: {
+        growUp() {
+          this.name = 'Tom'
+          this.com = 666
+          console.log(9999)
+        }
+      }
+    })
+  </script>
+</body>
+</html>

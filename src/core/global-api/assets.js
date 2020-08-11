@@ -9,7 +9,7 @@ export function initAssetRegisters (Vue: GlobalAPI) {
    */
   ASSET_TYPES.forEach(type => {
     Vue[type] = function (
-      id: string,
+      id: string,  // Vue.component('childComp', template:'<div>I am comp</div>')
       definition: Function | Object
     ): Function | Object | void {
       if (!definition) {

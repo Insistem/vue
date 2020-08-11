@@ -56,7 +56,7 @@ export function genElement (el: ASTElement, state: CodegenState): string {
   if (el.parent) {
     el.pre = el.pre || el.parent.pre
   }
-
+  // 各种结构性指令的最终处理方式
   if (el.staticRoot && !el.staticProcessed) {
     return genStatic(el, state)
   } else if (el.once && !el.onceProcessed) {
