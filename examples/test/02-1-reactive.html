@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Vue源码剖析</title>
+    <script src="../../dist/vue.js"></script>
+</head>
+
+<body>
+    <div id="demo">
+        <h1>数据响应化</h1>
+        <p>{{obj.foo}}</p>
+        <p>{{obj.bar}}</p>
+        <comp-a :foo="obj.foo + obj.bar"></comp-a>
+    </div>
+    <script>
+        // 创建实例
+        // 会有几个Observer？Dep？Watcher？
+        //           2     4     1
+        // 每遇到一个对象就创建一个 Observer
+        Vue.component('CompA', {
+          data() {
+            return {
+
+            }
+          },
+          props: ['foo'],
+          template: '<div>{{foo}}</div>'
+        })
+        const app = new Vue({
+            el: '#demo',
+            data: {
+                obj: {
+                    foo: 'foo',
+                    bar: 'mpy'
+                }
+            },
+            mounted() {
+
+                setTimeout(() => {
+                    // this.obj.foo = 'fooooo'
+                    // 如果要观察大总管工作情况，可以在observer/index.js
+                    // 的set()方法中添加断点，约在line 229
+                    this.$set(this.obj, 'bar', 'barrrrr')
+                }, 1000);
+                this.$watch('')
+                this.$set(this.obj, 'demo', 'demo') //在obj中动态添加属性，是怎么监听到的
+            }
+        });
+    </script>
+</body>
+
+</html>

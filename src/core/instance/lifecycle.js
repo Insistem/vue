@@ -138,6 +138,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
   }
 }
 
+// 挂载组件 -mpy
 export function mountComponent (
   vm: Component,
   el: ?Element,

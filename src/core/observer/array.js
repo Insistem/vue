@@ -6,6 +6,7 @@
 import { def } from '../util/index'
 
 const arrayProto = Array.prototype
+// 创建一个全新对象，克隆自数据原型对象
 export const arrayMethods = Object.create(arrayProto)
 
 const methodsToPatch = [
@@ -23,9 +24,13 @@ const methodsToPatch = [
  */
 methodsToPatch.forEach(function (method) {
   // cache original method
+  // 获取原型方法
   const original = arrayProto[method]
+  // 定义新方法
   def(arrayMethods, method, function mutator (...args) {
+    // 执行新方法
     const result = original.apply(this, args)
+    // 获取Ob
     const ob = this.__ob__
     let inserted
     switch (method) {
@@ -39,6 +44,7 @@ methodsToPatch.forEach(function (method) {
     }
     if (inserted) ob.observeArray(inserted)
     // notify change
+    // 通过ob获取大管家
     ob.dep.notify()
     return result
   })
