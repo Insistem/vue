@@ -1,6 +1,6 @@
 /*!
  * Vue.js v2.6.11
- * (c) 2014-2019 Evan You
+ * (c) 2014-2020 Evan You
  * Released under the MIT License.
  */
 (function (global, factory) {
@@ -858,6 +858,7 @@
    */
 
   var arrayProto = Array.prototype;
+  // 创建一个全新对象，克隆自数据原型对象
   var arrayMethods = Object.create(arrayProto);
 
   var methodsToPatch = [
@@ -875,12 +876,16 @@
    */
   methodsToPatch.forEach(function (method) {
     // cache original method
+    // 获取原型方法
     var original = arrayProto[method];
+    // 定义新方法
     def(arrayMethods, method, function mutator () {
       var args = [], len = arguments.length;
       while ( len-- ) args[ len ] = arguments[ len ];
 
+      // 执行新方法
       var result = original.apply(this, args);
+      // 获取Ob
       var ob = this.__ob__;
       var inserted;
       switch (method) {
@@ -894,6 +899,7 @@
       }
       if (inserted) { ob.observeArray(inserted); }
       // notify change
+      // 通过ob获取大管家
       ob.dep.notify();
       return result
     });
@@ -921,17 +927,25 @@
    */
   var Observer = function Observer (value) {
     this.value = value;
+    // 数组的dep是存在observer实例上
+    // TODO:大管家 ？？ 这个说法是否合理，外层的大对象未来当前value对象动态添加或删除属性 -mpy
+    // 这里的value 是一个对象
+    // 如果是数组，有数据动态加入或移除，通知视图更新
     this.dep = new Dep();
     this.vmCount = 0;
     def(value, '__ob__', this);
+    // 如果是数组, 覆盖原型上的方法 ，数组响应式的核心
     if (Array.isArray(value)) {
       if (hasProto) {
         protoAugment(value, arrayMethods);
       } else {
         copyAugment(value, arrayMethods, arrayKeys);
       }
+      // 将数组中每个index上对应的value处理为响应式
       this.observeArray(value);
     } else {
+      // 对象的dep是存在每个key上
+      // 如果是对象，循环对象的keys，调用defineReactive方法
       this.walk(value);
     }
   };
@@ -963,6 +977,8 @@
    * Augment a target Object or Array by intercepting
    * the prototype chain using __proto__
    */
+  // target是一个数组实例
+  // src直接覆盖其原型
   function protoAugment (target, src) {
     /* eslint-disable no-proto */
     target.__proto__ = src;
@@ -990,6 +1006,8 @@
     if (!isObject(value) || value instanceof VNode) {
       return
     }
+    // 每个对象配一个Observer实例
+    // 如果一个对象拥有__ob__属性，它就是一个响应式的数据
     var ob;
     if (hasOwn(value, '__ob__') && value.__ob__ instanceof Observer) {
       ob = value.__ob__;
@@ -1000,6 +1018,7 @@
       Object.isExtensible(value) &&
       !value._isVue
     ) {
+      // 初始化时需要创建Ob实例
       ob = new Observer(value);
     }
     if (asRootData && ob) {
@@ -1011,6 +1030,8 @@
   /**
    * Define a reactive property on an Object.
    */
+    // 定义属性拦截
+    // Vue.util.defineReactive = defineReactive 使用的就是这个defineReactive
   function defineReactive$$1 (
     obj,
     key,
@@ -1018,6 +1039,7 @@
     customSetter,
     shallow
   ) {
+    // 小管家： 每个key一个
     var dep = new Dep();
 
     var property = Object.getOwnPropertyDescriptor(obj, key);
@@ -1031,16 +1053,19 @@
     if ((!getter || setter) && arguments.length === 2) {
       val = obj[key];
     }
-
+    // 这里是一个递归操作，处理这个key对应value的子val
+    // 如果value是对象，递归创建 observer
     var childOb = !shallow && observe(val);
     Object.defineProperty(obj, key, {
       enumerable: true,
       configurable: true,
       get: function reactiveGetter () {
         var value = getter ? getter.call(obj) : val;
+        // 依赖收集
         if (Dep.target) {
           dep.depend();
           if (childOb) {
+            // 如果存在对象嵌套，则存在子ob实例，需要建立大管家和当前watcher之间的关系
             childOb.dep.depend();
             if (Array.isArray(value)) {
               dependArray(value);
@@ -1077,6 +1102,7 @@
    * triggers change notification if the property doesn't
    * already exist.
    */
+    // 挂在Vue实例上的$set 方法
   function set (target, key, val) {
     if (isUndef(target) || isPrimitive(target)
     ) {
@@ -1936,6 +1962,7 @@
   // completely stops working after triggering a few times... so, if native
   // Promise is available, we will use it:
   /* istanbul ignore next, $flow-disable-line */
+  // 将任务加到微任务队列，根据当前平台支持的方式进行选择，优先 promise 如果不支持就用 mutationObserver  -> setImmediate
   if (typeof Promise !== 'undefined' && isNative(Promise)) {
     var p = Promise.resolve();
     timerFunc = function () {
@@ -1980,9 +2007,10 @@
       setTimeout(flushCallbacks, 0);
     };
   }
-
+  // 此方法就是我们平时使用的$nextTick方法
   function nextTick (cb, ctx) {
     var _resolve;
+    // 用户传递的回到函数会被放入callbacks里面
     callbacks.push(function () {
       if (cb) {
         try {
@@ -1996,6 +2024,7 @@
     });
     if (!pending) {
       pending = true;
+      // 然后执行 timerFunc
       timerFunc();
     }
     // $flow-disable-line
@@ -3107,7 +3136,9 @@
   /*  */
 
   // inline hooks to be invoked on component VNodes during patch
+  // 在Vnode打补丁期间 调用内联钩子
   var componentVNodeHooks = {
+     // 组件实例化及挂载
     init: function init (vnode, hydrating) {
       if (
         vnode.componentInstance &&
@@ -3258,11 +3289,13 @@
     }
 
     // install component management hooks onto the placeholder node
+     // 安装钩子
     installComponentHooks(data);
 
     // return a placeholder vnode
     var name = Ctor.options.name || tag;
     var vnode = new VNode(
+       // 组件的名字
       ("vue-component-" + (Ctor.cid) + (name ? ("-" + name) : '')),
       data, undefined, undefined, undefined, context,
       { Ctor: Ctor, propsData: propsData, listeners: listeners, tag: tag, children: children },
@@ -3764,6 +3797,8 @@
     vm._events = Object.create(null);
     vm._hasHookEvent = false;
     // init parent attached events
+    // <Child @click="onClick">
+    // TODO:事件是谁派发，谁监听，典型的观察者模式，从老爹的监听中拿到自己需要事件?? -mpy
     var listeners = vm.$options._parentListeners;
     if (listeners) {
       updateComponentListeners(vm, listeners);
@@ -4015,6 +4050,7 @@
     };
   }
 
+  // 挂载组件 -mpy
   function mountComponent (
     vm,
     el,
@@ -4301,6 +4337,7 @@
 
     // do not cache length because more watchers might be pushed
     // as we run existing watchers
+    // 循环调用watcher。run()
     for (index = 0; index < queue.length; index++) {
       watcher = queue[index];
       if (watcher.before) {
@@ -4308,6 +4345,7 @@
       }
       id = watcher.id;
       has[id] = null;
+      // 关键代码： 执行run函数
       watcher.run();
       // in dev build, check and stop circular updates.
       if (has[id] != null) {
@@ -4333,6 +4371,7 @@
     resetSchedulerState();
 
     // call component updated and activated hooks
+    // 触发 ’activated  和 updated ‘ 钩子函数
     callActivatedHooks(activatedQueue);
     callUpdatedHooks(updatedQueue);
 
@@ -4379,6 +4418,7 @@
    */
   function queueWatcher (watcher) {
     var id = watcher.id;
+    // 防止同一个watcher重复排队，如果队列中已经有这个watcher，就不用再重复添加了
     if (has[id] == null) {
       has[id] = true;
       if (!flushing) {
@@ -4400,6 +4440,9 @@
           flushSchedulerQueue();
           return
         }
+        // 如果没有在等待状态
+        // 使用nextTick将flushSchedulerQueue入队
+        // 尝试异步方式 将 存放了watcher的flushSchedulerQueue 放入微任务队列
         nextTick(flushSchedulerQueue);
       }
     }
@@ -4499,9 +4542,12 @@
    */
   Watcher.prototype.addDep = function addDep (dep) {
     var id = dep.id;
+    // 如果没有建立和dep之间的关系
     if (!this.newDepIds.has(id)) {
+      // 则建立两者关系 - watcher中存储dep
       this.newDepIds.add(id);
       this.newDeps.push(dep);
+      // 反向建立dep和watcher关系 - dep中存储watcher
       if (!this.depIds.has(id)) {
         dep.addSub(this);
       }
@@ -4540,6 +4586,7 @@
     } else if (this.sync) {
       this.run();
     } else {
+      // watcher 入队
       queueWatcher(this);
     }
   };
@@ -4548,6 +4595,7 @@
    * Scheduler job interface.
    * Will be called by the scheduler.
    */
+  // watcher 真正执行更新任务的函数
   Watcher.prototype.run = function run () {
     if (this.active) {
       var value = this.get();
@@ -4735,6 +4783,7 @@
       }
     }
     // observe data
+    // 遍历data并做响应式处理
     observe(data, true /* asRootData */);
   }
 
@@ -4959,6 +5008,7 @@
 
   function initMixin (Vue) {
     Vue.prototype._init = function (options) {
+      // Vue实例
       var vm = this;
       // a uid
       vm._uid = uid$3++;
@@ -4992,12 +5042,15 @@
       }
       // expose real self
       vm._self = vm;
-      initLifecycle(vm);
-      initEvents(vm);
-      initRender(vm);
-      callHook(vm, 'beforeCreate');
+      // 各种初始化
+      initLifecycle(vm); // vm.$parent/vm.$root
+      initEvents(vm); // vm.$options._parentListeners, 从父组件中拿到自定义监听的事件
+      initRender(vm); // vm._c / vm.$createElement / vm.$slots / vm.$attrs
+      callHook(vm, 'beforeCreate'); // 在beforeCreate之前，数据还没初始化，所以不能使用data中的数据
+      // 获取祖辈注入的数据
       initInjections(vm); // resolve injections before data/props
-      initState(vm);
+      initState(vm); // 数据状态初始化： props/methods/data/computed/watch
+      // 给后代提供数据
       initProvide(vm); // resolve provide after data/props
       callHook(vm, 'created');
 
@@ -5007,7 +5060,7 @@
         mark(endTag);
         measure(("vue " + (vm._name) + " init"), startTag, endTag);
       }
-
+      // 选项如果有el，自动执行$mount
       if (vm.$options.el) {
         vm.$mount(vm.$options.el);
       }
@@ -5075,14 +5128,15 @@
     ) {
       warn('Vue is a constructor and should be called with the `new` keyword');
     }
+    // 执行初始化 - 页面展示的时候执行，也就是new Vue（）的时候执行 -mpy
     this._init(options);
   }
-
-  initMixin(Vue);
-  stateMixin(Vue);
-  eventsMixin(Vue);
-  lifecycleMixin(Vue);
-  renderMixin(Vue);
+  // 实现了众多的实例属性和方法 -mpy
+  initMixin(Vue); // 扩展了_init 方法
+  stateMixin(Vue); // 跟数据状态相关的属性和方法  Vue.prototype.$data/$props/$set/$delete/$watch
+  eventsMixin(Vue); // $on/$emit/$once/$off
+  lifecycleMixin(Vue); // _update(内部自动更新) / $forceUpdate（外部强制更新） / $destroy（外部强制销毁）
+  renderMixin(Vue); // $nextTick / _render
 
   /*  */
 
@@ -5215,7 +5269,7 @@
      */
     ASSET_TYPES.forEach(function (type) {
       Vue[type] = function (
-        id,
+        id,  // Vue.component('childComp', template:'<div>I am comp</div>')
         definition
       ) {
         if (!definition) {
@@ -5410,6 +5464,7 @@
 
     Vue.options = Object.create(null);
     ASSET_TYPES.forEach(function (type) {
+      // 在options中添加 components filters directives  三个属性的处理是一样的，所以放在了一起
       Vue.options[type + 's'] = Object.create(null);
     });
 
@@ -5422,9 +5477,11 @@
     initUse(Vue);
     initMixin$1(Vue);
     initExtend(Vue);
+    // 将component() filter() 方法挂在Vue的构造函数上，这样我们才可以使用Vue.component()来注册组件
     initAssetRegisters(Vue);
   }
 
+  // 初始化全局方法 在Vue构造函数上增加方法 - 构建时执行 -mpy
   initGlobalAPI(Vue);
 
   Object.defineProperty(Vue.prototype, '$isServer', {
@@ -6454,7 +6511,7 @@
         return node.nodeType === (vnode.isComment ? 8 : 3)
       }
     }
-
+  // vm.__patch__(prevVnode, vnode) 调用的就是这个函数
     return function patch (oldVnode, vnode, hydrating, removeOnly) {
       if (isUndef(vnode)) {
         if (isDef(oldVnode)) { invokeDestroyHook(oldVnode); }
@@ -7649,7 +7706,7 @@
         // skip the update if old and new VDOM state is the same.
         // `value` is handled separately because the DOM value may be temporarily
         // out of sync with VDOM state due to focus, composition and modifiers.
-        // This  #4521 by skipping the unnecesarry `checked` update.
+        // This  #4521 by skipping the unnecessary `checked` update.
         cur !== oldProps[key]
       ) {
         // some property updates can throw
@@ -9033,14 +9090,18 @@
   extend(Vue.options.components, platformComponents);
 
   // install platform patch function
+  // web平台 实例上使用的__patch__方法 -mpy
   Vue.prototype.__patch__ = inBrowser ? patch : noop;
 
   // public mount method
+  // 实现$mount : 挂载组件 -mpy
   Vue.prototype.$mount = function (
     el,
     hydrating
   ) {
+    // 获取el元素（被挂载到的真实DOM）
     el = el && inBrowser ? query(el) : undefined;
+    // 将模板转为真实DOM后，通过appendChild方法，添加到el元素中
     return mountComponent(this, el, hydrating)
   };
 
@@ -9714,7 +9775,7 @@
         );
       }
     }
-
+    // 核心是处理HTML
     parseHTML(template, {
       warn: warn$2,
       expectHTML: options.expectHTML,
@@ -9791,6 +9852,7 @@
           processRawAttrs(element);
         } else if (!element.processed) {
           // structural directives
+          // 结构性指令的处理 v-for
           processFor(element);
           processIf(element);
           processOnce(element);
@@ -9805,6 +9867,7 @@
 
         if (!unary) {
           currentParent = element;
+          // start 标签入栈
           stack.push(element);
         } else {
           closeElement(element);
@@ -9894,7 +9957,7 @@
         }
       },
       comment: function comment (text, start, end) {
-        // adding anyting as a sibling to the root node is forbidden
+        // adding anything as a sibling to the root node is forbidden
         // comments should still be allowed, but ignored
         if (currentParent) {
           var child = {
@@ -10620,8 +10683,10 @@
     isStaticKey = genStaticKeysCached(options.staticKeys || '');
     isPlatformReservedTag = options.isReservedTag || no;
     // first pass: mark all non-static nodes.
+    // 标记静态节点
     markStatic$1(root);
     // second pass: mark static roots.
+    // 标记静态根节点
     markStaticRoots(root, false);
   }
 
@@ -10949,7 +11014,7 @@
     if (el.parent) {
       el.pre = el.pre || el.parent.pre;
     }
-
+    // 各种结构性指令的最终处理方式
     if (el.staticRoot && !el.staticProcessed) {
       return genStatic(el, state)
     } else if (el.once && !el.onceProcessed) {
@@ -11963,3 +12028,4 @@
   return Vue;
 
 }));
+//# sourceMappingURL=vue.js.map

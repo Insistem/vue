@@ -85,6 +85,7 @@ function flushSchedulerQueue () {
 
   // do not cache length because more watchers might be pushed
   // as we run existing watchers
+  // 循环调用watcher。run()
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
@@ -92,6 +93,7 @@ function flushSchedulerQueue () {
     }
     id = watcher.id
     has[id] = null
+    // 关键代码： 执行run函数
     watcher.run()
     // in dev build, check and stop circular updates.
     if (process.env.NODE_ENV !== 'production' && has[id] != null) {
@@ -117,6 +119,7 @@ function flushSchedulerQueue () {
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 触发 ’activated  和 updated ‘ 钩子函数
   callActivatedHooks(activatedQueue)
   callUpdatedHooks(updatedQueue)
 
@@ -163,6 +166,7 @@ function callActivatedHooks (queue) {
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
+  // 防止同一个watcher重复排队，如果队列中已经有这个watcher，就不用再重复添加了
   if (has[id] == null) {
     has[id] = true
     if (!flushing) {
@@ -184,6 +188,9 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 如果没有在等待状态
+      // 使用nextTick将flushSchedulerQueue入队
+      // 尝试异步方式 将 存放了watcher的flushSchedulerQueue 放入微任务队列
       nextTick(flushSchedulerQueue)
     }
   }

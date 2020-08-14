@@ -39,6 +39,7 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+// 将任务加到微任务队列，根据当前平台支持的方式进行选择，优先 promise 如果不支持就用 mutationObserver  -> setImmediate
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
   timerFunc = () => {
@@ -83,9 +84,10 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     setTimeout(flushCallbacks, 0)
   }
 }
-
+// 此方法就是我们平时使用的$nextTick方法
 export function nextTick (cb?: Function, ctx?: Object) {
   let _resolve
+  // 用户传递的回到函数会被放入callbacks里面
   callbacks.push(() => {
     if (cb) {
       try {
@@ -99,6 +101,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
   })
   if (!pending) {
     pending = true
+    // 然后执行 timerFunc
     timerFunc()
   }
   // $flow-disable-line
